@@ -169,18 +169,18 @@
 
     // Handle typing
     socket.on('user typing', (data) => {
-      typingStatusDiv.textContent = `${data.userName} is typing...`;
+      typingStatusDiv.textContent = `${data.userName} đang soạn tin...`;
       setTimeout(() => (typingStatusDiv.textContent = ''), 3000);
     });
 
     // User joined
     socket.on('user joined', (data) => {
-      displaySystemMessage(`${data.userName} joined the chat.`);
+      displaySystemMessage(`${data.userName} tham gia cuộc trò chuyện.`);
     });
 
     // User left
     socket.on('user left', (data) => {
-      displaySystemMessage(`${data.userName} left the chat.`);
+      displaySystemMessage(`${data.userName} đã rời khỏi cuộc trò chuyện.`);
     });
 
     // Display message
