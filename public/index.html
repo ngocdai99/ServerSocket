@@ -1,28 +1,142 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Chat app using Socket.IO Nodejs jQuery</title>
-  <link rel="stylesheet" href="./style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socket Chat App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f0f0;
+    }
+    .container {
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    #messages {
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: #f9f9f9;
+    }
+    .message {
+      margin: 5px 0;
+    }
+    .system {
+      color: gray;
+      font-style: italic;
+    }
+    .typing-status {
+      font-style: italic;
+      color: gray;
+    }
+    input[type="text"] {
+      padding: 10px;
+      width: calc(100% - 22px);
+      margin: 5px 0;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
 </head>
 <body>
-  <ul class="pages">
-    <li class="chat page">
-      <div class="chatArea">
-        <ul class="messages"></ul>
-      </div>
-      <input class="inputMessage" placeholder="Type here..."/>
-    </li>
-    <li class="login page">
-      <div class="form">
-        <h3 class="title">What's your nickname?</h3>
-        <input class="usernameInput" type="text" maxlength="14" />
-      </div>
-    </li>
-  </ul>
+  <div class="container">
+    <div id="join-chat">
+      <h2>Join Chat Room</h2>
+      <input id="username" type="text" placeholder="Enter your username" />
+      <button id="join-btn">Join</button>
+    </div>
+    
+    <div id="chat-room" style="display: none;">
+      <h2>Chat Room</h2>
+      <div id="messages"></div>
+      <div class="typing-status" id="typing-status"></div>
+      <input id="message" type="text" placeholder="Enter message" />
+      <button id="send-btn">Send</button>
+      <input id="to-user" type="text" placeholder="Send to (optional user ID)" />
+    </div>
+  </div>
 
-  <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="./main.js"></script>
+  <script>
+    const socket = io('http://localhost:3000'); // Adjust to your server's URL
+    const joinChatDiv = document.getElementById('join-chat');
+    const chatRoomDiv = document.getElementById('chat-room');
+    const usernameInput = document.getElementById('username');
+    const messageInput = document.getElementById('message');
+    const sendBtn = document.getElementById('send-btn');
+    const joinBtn = document.getElementById('join-btn');
+    const messagesDiv = document.getElementById('messages');
+    const typingStatusDiv = document.getElementById('typing-status');
+    const toUserInput = document.getElementById('to-user');
+    let username = '';
+    let isLoggedIn = false;
+
+    joinBtn.addEventListener('click', () => {
+      username = usernameInput.value.trim();
+      if (username) {
+        socket.emit('join', username);
+        isLoggedIn = true;
+        joinChatDiv.style.display = 'none';
+        chatRoomDiv.style.display = 'block';
+      }
+    });
+
+    sendBtn.addEventListener('click', () => {
+      const message = messageInput.value.trim();
+      if (message) {
+        socket.emit('send message', { message, to: toUserInput.value });
+        displayMessage('You', message);
+        messageInput.value = '';
+      }
+    });
+
+    messageInput.addEventListener('input', () => {
+      socket.emit('typing', { to: toUserInput.value });
+    });
+
+    socket.on('receive message', (data) => {
+      displayMessage(data.username, data.message);
+    });
+
+    socket.on('user typing', (data) => {
+      typingStatusDiv.textContent = `${data.username} is typing...`;
+      setTimeout(() => typingStatusDiv.textContent = '', 3000);
+    });
+
+    socket.on('user joined', (data) => {
+      const systemMessage = `${data.username} joined the chat.`;
+      messagesDiv.innerHTML += `<p class="message system">${systemMessage}</p>`;
+    });
+
+    socket.on('user left', (data) => {
+      const systemMessage = `${data.username} left the chat.`;
+      messagesDiv.innerHTML += `<p class="message system">${systemMessage}</p>`;
+    });
+
+    function displayMessage(username, message) {
+      messagesDiv.innerHTML += `<p class="message"><strong>${username}:</strong> ${message}</p>`;
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+  </script>
 </body>
 </html>
