@@ -150,6 +150,7 @@
 
     socket.on('error', (error) => {
       if (error.type === 'username_taken') {
+        isLoggedIn = false
         alert(error.message); // Hoặc hiển thị lỗi trong giao diện
       }
     });
