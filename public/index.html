@@ -62,7 +62,7 @@
   <div class="container">
     <div id="join-chat">
       <h2>Join Chat Room</h2>
-      <input id="username" type="text" placeholder="Enter your username" />
+      <input id="userName" type="text" placeholder="Enter your userName" />
       <button id="join-btn">Join</button>
     </div>
     
@@ -81,20 +81,20 @@
     const socket = io('https://serversocket-4oew.onrender.com/'); // Adjust to your server's URL
     const joinChatDiv = document.getElementById('join-chat');
     const chatRoomDiv = document.getElementById('chat-room');
-    const usernameInput = document.getElementById('username');
+    const userNameInput = document.getElementById('userName');
     const messageInput = document.getElementById('message');
     const sendBtn = document.getElementById('send-btn');
     const joinBtn = document.getElementById('join-btn');
     const messagesDiv = document.getElementById('messages');
     const typingStatusDiv = document.getElementById('typing-status');
     const toUserInput = document.getElementById('to-user');
-    let username = '';
+    let userName = '';
     let isLoggedIn = false;
 
     joinBtn.addEventListener('click', () => {
-      username = usernameInput.value.trim();
-      if (username) {
-        socket.emit('join', username);
+      userName = userNameInput.value.trim();
+      if (userName) {
+        socket.emit('join', userName);
         isLoggedIn = true;
         joinChatDiv.style.display = 'none';
         chatRoomDiv.style.display = 'block';
@@ -115,26 +115,26 @@
     });
 
     socket.on('receive message', (data) => {
-      displayMessage(data.username, data.message);
+      displayMessage(data.userName, data.message);
     });
 
     socket.on('user typing', (data) => {
-      typingStatusDiv.textContent = `${data.username} is typing...`;
+      typingStatusDiv.textContent = `${data.userName} is typing...`;
       setTimeout(() => typingStatusDiv.textContent = '', 3000);
     });
 
     socket.on('user joined', (data) => {
-      const systemMessage = `${data.username} joined the chat.`;
+      const systemMessage = `${data.userName} joined the chat.`;
       messagesDiv.innerHTML += `<p class="message system">${systemMessage}</p>`;
     });
 
     socket.on('user left', (data) => {
-      const systemMessage = `${data.username} left the chat.`;
+      const systemMessage = `${data.userName} left the chat.`;
       messagesDiv.innerHTML += `<p class="message system">${systemMessage}</p>`;
     });
 
-    function displayMessage(username, message) {
-      messagesDiv.innerHTML += `<p class="message"><strong>${username}:</strong> ${message}</p>`;
+    function displayMessage(userName, message) {
+      messagesDiv.innerHTML += `<p class="message"><strong>${userName}:</strong> ${message}</p>`;
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
   </script>

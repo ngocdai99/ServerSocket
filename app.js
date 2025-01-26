@@ -18,10 +18,10 @@ const users = {}
 io.on('connection', (socket) => {
 
 
-  socket.on('join', (username) => {
-    console.log(`User ${username} joined chat room`)
-    socket.broadcast.emit('user join', { userId: socket.id, username })
-    users[socket.id] = username
+  socket.on('join', (userName) => {
+    console.log(`User ${userName} joined chat room`)
+    socket.broadcast.emit('user join', { userId: socket.id, userName })
+    users[socket.id] = userName
   })
 
   socket.on('typing', ({ to }) => {
