@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
       padding: 0;
       background-color: #f0f0f0;
     }
+
     .container {
       padding: 20px;
       max-width: 600px;
@@ -18,9 +20,11 @@
       background-color: white;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
+
     h2 {
       text-align: center;
     }
+
     #messages {
       height: 300px;
       overflow-y: auto;
@@ -29,23 +33,33 @@
       padding: 10px;
       background-color: #f9f9f9;
     }
+
     .message {
       margin: 5px 0;
     }
+
+    .message.you {
+      text-align: right;
+      color: blue;
+    }
+
     .system {
       color: gray;
       font-style: italic;
     }
+
     .typing-status {
       font-style: italic;
       color: gray;
     }
+
     input[type="text"] {
       padding: 10px;
       width: calc(100% - 22px);
       margin: 5px 0;
       border: 1px solid #ccc;
     }
+
     button {
       padding: 10px 20px;
       background-color: #4CAF50;
@@ -53,19 +67,27 @@
       border: none;
       cursor: pointer;
     }
+
     button:hover {
       background-color: #45a049;
     }
+
+    .error {
+      color: red;
+      text-align: center;
+    }
   </style>
 </head>
+
 <body>
   <div class="container">
     <div id="join-chat">
       <h2>Join Chat Room</h2>
-      <input id="userName" type="text" placeholder="Enter your userName" />
+      <input id="userName" type="text" placeholder="Enter your username" />
       <button id="join-btn">Join</button>
+      <p class="error" id="error-message"></p>
     </div>
-    
+
     <div id="chat-room" style="display: none;">
       <h2>Chat Room</h2>
       <div id="messages"></div>
@@ -78,7 +100,7 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    const socket = io('https://serversocket-4oew.onrender.com/'); // Adjust to your server's URL
+    const socket = io('https://serversocket-4oew.onrender.com'); // Replace with your server URL
     const joinChatDiv = document.getElementById('join-chat');
     const chatRoomDiv = document.getElementById('chat-room');
     const userNameInput = document.getElementById('userName');
@@ -88,9 +110,12 @@
     const messagesDiv = document.getElementById('messages');
     const typingStatusDiv = document.getElementById('typing-status');
     const toUserInput = document.getElementById('to-user');
+    const errorMessageDiv = document.getElementById('error-message');
     let userName = '';
     let isLoggedIn = false;
+    let typingTimeout;
 
+    // Join chat
     joinBtn.addEventListener('click', () => {
       userName = userNameInput.value.trim();
       if (userName) {
@@ -98,45 +123,79 @@
         isLoggedIn = true;
         joinChatDiv.style.display = 'none';
         chatRoomDiv.style.display = 'block';
+        errorMessageDiv.textContent = '';
+      } else {
+        errorMessageDiv.textContent = 'Username is required!';
       }
     });
 
+    // Send message
     sendBtn.addEventListener('click', () => {
       const message = messageInput.value.trim();
       if (message) {
         socket.emit('send message', { message, to: toUserInput.value });
-        displayMessage('You', message);
+        displayMessage('You', message, true);
         messageInput.value = '';
       }
     });
 
+    // Typing event
     messageInput.addEventListener('input', () => {
-      socket.emit('typing', { to: toUserInput.value });
+      clearTimeout(typingTimeout);
+
+      typingTimeout = setTimeout(() => {
+        socket.emit('typing', { to: toUserInput.value });
+      }, 300); // Debounce typing event
     });
 
+     // Error handling
+     socket.on('error', (error) => {
+      errorMessageDiv.textContent = `${error.message}`;
+    });
+
+    // Reconnect on server reconnect
+    socket.on('connect', () => {
+      if (isLoggedIn) {
+        socket.emit('join', userName);
+      }
+    });
+
+    // Handle messages
     socket.on('receive message', (data) => {
       displayMessage(data.userName, data.message);
     });
 
+    // Handle typing
     socket.on('user typing', (data) => {
       typingStatusDiv.textContent = `${data.userName} is typing...`;
-      setTimeout(() => typingStatusDiv.textContent = '', 3000);
+      setTimeout(() => (typingStatusDiv.textContent = ''), 3000);
     });
 
+    // User joined
     socket.on('user joined', (data) => {
-      const systemMessage = `${data.userName} joined the chat.`;
-      messagesDiv.innerHTML += `<p class="message system">${systemMessage}</p>`;
+      displaySystemMessage(`${data.userName} joined the chat.`);
     });
 
+    // User left
     socket.on('user left', (data) => {
-      const systemMessage = `${data.userName} left the chat.`;
-      messagesDiv.innerHTML += `<p class="message system">${systemMessage}</p>`;
+      displaySystemMessage(`${data.userName} left the chat.`);
     });
 
-    function displayMessage(userName, message) {
-      messagesDiv.innerHTML += `<p class="message"><strong>${userName}:</strong> ${message}</p>`;
+    // Display message
+    function displayMessage(userName, message, isYou = false) {
+      const messageClass = isYou ? 'message you' : 'message';
+      messagesDiv.innerHTML += `<p class="${messageClass}"><strong>${userName}:</strong> ${message}</p>`;
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
+
+    // Display system message
+    function displaySystemMessage(message) {
+      messagesDiv.innerHTML += `<p class="message system">${message}</p>`;
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+   
   </script>
 </body>
+
 </html>
