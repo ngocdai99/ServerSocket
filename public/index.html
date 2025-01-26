@@ -148,9 +148,10 @@
       }, 300); // Debounce typing event
     });
 
-     // Error handling
-     socket.on('error', (error) => {
-      errorMessageDiv.textContent = `${error.message}`;
+    socket.on('error', (error) => {
+      if (error.type === 'username_taken') {
+        alert(error.message); // Hoặc hiển thị lỗi trong giao diện
+      }
     });
 
     // Reconnect on server reconnect
@@ -194,7 +195,7 @@
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
-   
+
   </script>
 </body>
 
