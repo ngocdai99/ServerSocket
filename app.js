@@ -19,7 +19,7 @@ io.on('connection', (socket) => {
 
 
   socket.on('join', (username) => {
-    console.log(`User ${socket.id} joined chat room`)
+    console.log(`User ${username} joined chat room`)
     socket.broadcast.emit('user join', { userId: socket.id, username })
     users[socket.id] = username
   })
