@@ -49,18 +49,24 @@ io.on('connection', (socket) => {
   });
 
 
-  socket.on('send message', ({ message }) => {
-    if (!users[socket.id]) return; // Kiểm tra người dùng có tồn tại không
-
+  socket.on('send message', ({ message, image }) => {
+    if (!users[socket.id]) return;
+  
     console.log(`Message from ${users[socket.id]}: ${message}`);
-
+    if (image) {
+      console.log(`Image received from ${users[socket.id]}: ${image}`);
+    }
+  
     const messageData = {
       from: socket.id,
       message,
+      image, // Thêm ảnh vào dữ liệu gửi đi
       userName: users[socket.id],
     };
-    socket.broadcast.emit('receive message', messageData); 
+  
+    socket.broadcast.emit('receive message', messageData);
   });
+  
 
   // Xử lý sự kiện người dùng ngắt kết nối
   socket.on('disconnect', () => {
