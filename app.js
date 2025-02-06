@@ -12,7 +12,7 @@ server.listen(port, () => {
 
 
 app.use(express.static(path.join(__dirname, 'public')));
-
+// check
 
 const users = {};
 const typingTimers = {};
